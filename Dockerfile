@@ -14,40 +14,42 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt update && \
     apt -y upgrade && \
     apt install -y --no-install-recommends \
-        software-properties-common \
-        python3.10-venv \
-        python3-pip \
-        python3-tk \
-        bash \
-        dos2unix \
-        git \
-        ncdu \
-        nginx \
-        net-tools \
-        openssh-server \
-        libglib2.0-0 \
-        libsm6 \
-        libgl1 \
-        libxrender1 \
-        libxext6 \
-        ffmpeg \
-        wget \
-        curl \
-        psmisc \
-        rsync \
-        vim \
-        zip \
-        unzip \
-        p7zip-full \
-        htop \
-        screen \
-        tmux \
-        pkg-config \
-        libcairo2-dev \
-        libgoogle-perftools4 \
-        libtcmalloc-minimal4 \
-        apt-transport-https \
-        ca-certificates && \
+    software-properties-common \
+    python3.10-venv \
+    python3-pip \
+    python3-tk \
+    bash \
+    dos2unix \
+    git \
+    ncdu \
+    nginx \
+    net-tools \
+    openssh-server \
+    libglib2.0-0 \
+    libsm6 \
+    libgl1 \
+    libxrender1 \
+    libxext6 \
+    ffmpeg \
+    wget \
+    curl \
+    psmisc \
+    rsync \
+    vim \
+    zip \
+    unzip \
+    p7zip-full \
+    htop \
+    screen \
+    tmux \
+    pkg-config \
+    libcairo2-dev \
+    libgoogle-perftools4 \
+    libtcmalloc-minimal4 \
+    apt-transport-https \
+    ripgrep \
+    fd-find \
+    ca-certificates && \
     update-ca-certificates && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -62,8 +64,8 @@ FROM base as kohya_ss_setup
 # Add SDXL base model
 # This needs to already have been downloaded:
 #   wget https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
-RUN mkdir -p /sd-models
-COPY sd_xl_base_1.0.safetensors /sd-models/sd_xl_base_1.0.safetensors
+# RUN mkdir -p /sd-models
+# COPY sd_xl_base_1.0.safetensors /sd-models/sd_xl_base_1.0.safetensors
 
 # Create workspace working directory
 WORKDIR /
@@ -78,23 +80,23 @@ RUN python3 -m venv --system-site-packages venv && \
     source venv/bin/activate && \
     pip3 install torch==2.0.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
     pip3 install xformers==0.0.22 \
-        bitsandbytes==0.41.1 \
-        tensorboard==2.14.1 \
-        tensorflow==2.14.0 \
-        wheel \
-        scipy \
-        tensorrt && \
+    bitsandbytes==0.41.1 \
+    tensorboard==2.14.1 \
+    tensorflow==2.14.0 \
+    wheel \
+    scipy \
+    tensorrt && \
     pip3 install -r requirements.txt && \
     pip3 install . && \
     deactivate
 
 # Install Jupyter, gdown and OhMyRunPod
 RUN pip3 install -U --no-cache-dir jupyterlab \
-        jupyterlab_widgets \
-        ipykernel \
-        ipywidgets \
-        gdown \
-        OhMyRunPod
+    jupyterlab_widgets \
+    ipykernel \
+    ipywidgets \
+    gdown \
+    OhMyRunPod
 
 # Install RunPod File Uploader
 RUN curl -sSL https://github.com/kodxana/RunPod-FilleUploader/raw/main/scripts/installer.sh -o installer.sh && \
@@ -108,6 +110,12 @@ RUN curl https://rclone.org/install.sh | bash
 RUN wget https://github.com/runpod/runpodctl/releases/download/v1.13.0/runpodctl-linux-amd64 -O runpodctl && \
     chmod a+x runpodctl && \
     mv runpodctl /usr/local/bin
+
+# Install Croc
+RUN curl https://getcroc.schollz.com | bash
+
+# Install awscli
+RUN pip3 install awscli
 
 # Remove existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*
