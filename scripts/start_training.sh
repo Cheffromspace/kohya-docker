@@ -1,9 +1,12 @@
 #! /bin/bash
 
+# fetch training data from s3
+
+aws s3 cp s3://kohya-ss/training/dataset /workspace/training/dataset --recursive
 mkdir -p /workspace/output/sample
 mv /workspace/training/prompt.txt /workspace/output/sample/prompt.txt
 
-cd /workspace/kohya_ss || exit
+cd /workspace/kohya_ss
 
 accelerate launch --num_cpu_threads_per_process=2 \
 "./sdxl_train_network.py" \

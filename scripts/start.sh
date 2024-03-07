@@ -13,7 +13,9 @@ execute_script() {
     local script_msg=$2
     if [[ -f ${script_path} ]]; then
         echo "${script_msg}"
-        bash ${script_path}
+        bash "${script_path}"
+    elif [[ -n ${script_path} ]]; then
+        echo "Script not found: ${script_path}"
     fi
 }
 
@@ -138,7 +140,12 @@ EOF
 
 #Sync s3 bucket
 sync_s3() {
-    aws s3 sync s3://mytrainingdata /workspace/trainingdata
+    echo "Syncing S3 bucket..."
+    if [[ -z "${AWS_ACCESS_KEY_ID}" ]] || [[ -z "${AWS_SECRET_ACCESS_KEY}" ]] || [[ -z "${S3_BUCKET}" ]]; then
+        echo "AWS credentials are not set or no bucket name provided. Skipping S3 sync."
+        return
+    fi
+    aws s3 cp s3://"${S3_BUCKET}" /workspace/trainingdata --recursive
 }
 
 # ---------------------------------------------------------------------------- #
@@ -150,6 +157,8 @@ start_nginx
 setup_ssh
 start_jupyter
 start_runpod_uploader
+execute_script "/update_kohya.sh" "Running update script ..."
+sync_s3
 execute_script "/pre_start.sh" "Running pre-start script..."
 configure_filezilla
 export_env_vars
