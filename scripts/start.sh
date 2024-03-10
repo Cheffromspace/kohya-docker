@@ -14,8 +14,6 @@ execute_script() {
     if [[ -f ${script_path} ]]; then
         echo "${script_msg}"
         bash "${script_path}"
-    elif [[ -n ${script_path} ]]; then
-        echo "Script not found: ${script_path}"
     fi
 }
 
@@ -23,7 +21,7 @@ setup_ssh() {
     if [[ $PUBLIC_KEY ]]; then
         echo "Setting up SSH..."
         mkdir -p ~/.ssh
-        echo -e "${PUBLIC_KEY}\n" >> ~/.ssh/authorized_keys
+        echo -e "${PUBLIC_KEY}\n" >>~/.ssh/authorized_keys
         chmod 700 -R ~/.ssh
 
         if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
@@ -51,30 +49,30 @@ setup_ssh() {
 
 export_env_vars() {
     echo "Exporting environment variables..."
-    printenv | grep -E '^RUNPOD_|^PATH=|^_=' | awk -F = '{ print "export " $1 "=\"" $2 "\"" }' >> /etc/rp_environment
-    echo 'source /etc/rp_environment' >> ~/.bashrc
+    printenv | grep -E '^RUNPOD_|^PATH=|^_=' | awk -F = '{ print "export " $1 "=\"" $2 "\"" }' >>/etc/rp_environment
+    echo 'source /etc/rp_environment' >>~/.bashrc
 }
 
 start_jupyter() {
     echo "Starting Jupyter Lab..."
     mkdir -p /workspace/logs
-    cd / && \
-    nohup jupyter lab --allow-root \
-      --no-browser \
-      --port=8888 \
-      --ip=* \
-      --FileContentsManager.delete_to_trash=False \
-      --ContentsManager.allow_hidden=True \
-      --ServerApp.terminado_settings='{"shell_command":["/bin/bash"]}' \
-      --ServerApp.token="" \
-      --ServerApp.allow_origin=* \
-      --ServerApp.preferred_dir=/workspace &> /workspace/logs/jupyter.log &
+    cd / &&
+        nohup jupyter lab --allow-root \
+            --no-browser \
+            --port=8888 \
+            --ip=* \
+            --FileContentsManager.delete_to_trash=False \
+            --ContentsManager.allow_hidden=True \
+            --ServerApp.terminado_settings='{"shell_command":["/bin/bash"]}' \
+            --ServerApp.token="" \
+            --ServerApp.allow_origin=* \
+            --ServerApp.preferred_dir=/workspace &>/workspace/logs/jupyter.log &
     echo "Jupyter Lab started"
 }
 
 start_runpod_uploader() {
     echo "Starting RunPod Uploader..."
-    nohup /usr/local/bin/runpod-uploader &> /workspace/logs/runpod-uploader.log &
+    nohup /usr/local/bin/runpod-uploader &>/workspace/logs/runpod-uploader.log &
     echo "RunPod Uploader started"
 }
 
@@ -95,21 +93,21 @@ configure_filezilla() {
         ssh_config="/etc/ssh/sshd_config"
 
         # Enable PasswordAuthentication
-        grep -q "^PasswordAuthentication" ${ssh_config} && \
-          sed -i "s/^PasswordAuthentication.*/PasswordAuthentication yes/" ${ssh_config} || \
-          echo "PasswordAuthentication yes" >> ${ssh_config}
+        grep -q "^PasswordAuthentication" ${ssh_config} &&
+            sed -i "s/^PasswordAuthentication.*/PasswordAuthentication yes/" ${ssh_config} ||
+            echo "PasswordAuthentication yes" >>${ssh_config}
 
         # Enable PermitRootLogin
-        grep -q "^PermitRootLogin" ${ssh_config} && \
-          sed -i "s/^PermitRootLogin.*/PermitRootLogin yes/" ${ssh_config} || \
-          echo "PermitRootLogin yes" >> ${ssh_config}
+        grep -q "^PermitRootLogin" ${ssh_config} &&
+            sed -i "s/^PermitRootLogin.*/PermitRootLogin yes/" ${ssh_config} ||
+            echo "PermitRootLogin yes" >>${ssh_config}
 
         # Restart the SSH service
         service ssh restart
 
         # Create FileZilla XML configuration for SFTP
         filezilla_config_file="/workspace/filezilla_sftp_config.xml"
-        cat > ${filezilla_config_file} << EOF
+        cat >${filezilla_config_file} <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <FileZilla3 version="3.66.1" platform="linux">
     <Servers>
@@ -138,14 +136,13 @@ EOF
     fi
 }
 
-#Sync s3 bucket
 sync_s3() {
-    echo "Syncing S3 bucket..."
-    if [[ -z "${AWS_ACCESS_KEY_ID}" ]] || [[ -z "${AWS_SECRET_ACCESS_KEY}" ]] || [[ -z "${S3_BUCKET}" ]]; then
-        echo "AWS credentials are not set or no bucket name provided. Skipping S3 sync."
-        return
+    if [[ $AWS_ACCESS_KEY_ID && $AWS_SECRET_ACCESS_KEY && $S3_BUCKET_NAME ]]; then
+        echo "Syncing workspace with S3..."
+        mkdir -p /workspace/training
+        echo $S3_BUCKET_NAME
+        aws s3 cp s3://${S3_BUCKET_NAME} /workspace/training --recursive
     fi
-    aws s3 cp s3://"${S3_BUCKET}" /workspace/trainingdata --recursive
 }
 
 # ---------------------------------------------------------------------------- #
@@ -153,15 +150,15 @@ sync_s3() {
 # ---------------------------------------------------------------------------- #
 
 echo "Container Started, configuration in progress..."
-start_nginx
+#start_nginx
 setup_ssh
-start_jupyter
-start_runpod_uploader
-execute_script "/update_kohya.sh" "Running update script ..."
+#start_jupyter
+#start_runpod_uploader
 sync_s3
 execute_script "/pre_start.sh" "Running pre-start script..."
-configure_filezilla
+#configure_filezilla
 export_env_vars
 execute_script "/post_start.sh" "Running post-start script..."
+execute_script "/start_training.sh" "Starting training..."
 echo "Container is READY!"
 sleep infinity

@@ -3,6 +3,7 @@
 export PYTHONUNBUFFERED=1
 export APP="kohya_ss"
 DOCKER_IMAGE_VERSION_FILE="/workspace/${APP}/docker_image_version"
+        echo 'updating kojya_ss'
 
 echo "Template version: ${TEMPLATE_VERSION}"
 
@@ -32,11 +33,13 @@ link_models() {
     ln -s /sd-models/sd_xl_base_1.0.safetensors /workspace/sd_xl_base_1.0.safetensors
 }
 
+
 if [ "$(printf '%s\n' "$EXISTING_VERSION" "$TEMPLATE_VERSION" | sort -V | head -n 1)" = "$EXISTING_VERSION" ]; then
     if [ "$EXISTING_VERSION" != "$TEMPLATE_VERSION" ]; then
         sync_apps
         fix_venvs
         link_models
+
 
         # Configure accelerate
         echo "Configuring accelerate..."
