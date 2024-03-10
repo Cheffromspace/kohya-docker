@@ -8,7 +8,7 @@ cd /workspace/kohya_ss
 source venv/bin/activate
 
 accelerate launch --num_cpu_threads_per_process=2 \
-    "./sdxl_train_network.py" \
+    "./sdxl_train.py" \
     --bucket_reso_steps=64 \
     --cache_latents \
     --cache_latents_to_disk \
