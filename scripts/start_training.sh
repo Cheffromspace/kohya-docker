@@ -46,11 +46,12 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --sample_every_n_epochs="1" \
     --sample_every_n_steps="100" \
     --in_json="/workspace/training/captions.json" \
-    --persistent_data_loader_workers \
+    --persistent_data_loader_workers=4 \
     --gradient_accumulation_steps=4 \
     --log_with="tensorboard" \
     --logging_dir="/workspace/output/logs" \
-    --max_token_length="150"
+    --max_token_length="150" \
+    --dataset_repeats="4"
 
 # Export models to s3
 aws s3 cp /workspace/output s3://training-output-${S3_BUCKET_NAME} --recursive
