@@ -5,8 +5,6 @@ mkdir -p /workspace/output/logs
 echo "Starting training"
 cd /workspace/kohya_ss
 source venv/bin/activate
-pip install -r requirements.txt
-pip install TensorRT
 
 accelerate launch --num_cpu_threads_per_process=2 \
     --config_file=/workspace/training/accelerate.yaml \
@@ -39,7 +37,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --save_every_n_epochs="1" \
     --save_model_as=safetensors \
     --save_precision="fp16" \
-    --train_batch_size="16" \
+    --train_batch_size="32" \
     --train_data_dir="/workspace/training/dataset" \
     --xformers \
     --sample_sampler=euler_a \
@@ -54,6 +52,6 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --dataset_repeats="4"
 
 # Export models to s3
-aws s3 cp /workspace/output s3://training-output-${S3_BUCKET_NAME} --recursive
+aws s3 cp /workspace/output s3://${S3_BUCKET_NAME}/training-output --recursive
 # Shut down
 exit

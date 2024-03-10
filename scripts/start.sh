@@ -159,6 +159,6 @@ execute_script "/pre_start.sh" "Running pre-start script..."
 #configure_filezilla
 export_env_vars
 execute_script "/post_start.sh" "Running post-start script..."
-execute_script "/start_training.sh" "Starting training..."
+#execute_script "/start_training.sh" "Starting training..."
 echo "Container is READY!"
 sleep infinity
