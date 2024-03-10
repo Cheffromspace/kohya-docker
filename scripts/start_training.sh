@@ -1,5 +1,4 @@
 #! /bin/bash
-# fetch training data from s3
 
 mkdir -p /workspace/output/logs
 
@@ -10,7 +9,7 @@ pip install -r requirements.txt
 pip install TensorRT
 
 accelerate launch --num_cpu_threads_per_process=2 \
-    --config_file=/workspace/kohya_ss/accelerate_config/config.yaml \
+    --config_file=/workspace/training/accelerate.yaml \
     "./sdxl_train.py" \
     --bucket_reso_steps=64 \
     --cache_latents \
@@ -25,7 +24,6 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --learning_rate_te2=4.8e-6 \
     --lr_scheduler="constant_with_warmup" \
     --lr_scheduler_num_cycles="50" \
-    --max_data_loader_n_workers="0" \
     --max_grad_norm="1" \
     --resolution="1024,1024" \
     --max_train_epochs=50 \
@@ -41,7 +39,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --save_every_n_epochs="1" \
     --save_model_as=safetensors \
     --save_precision="fp16" \
-    --train_batch_size="32" \
+    --train_batch_size="16" \
     --train_data_dir="/workspace/training/dataset" \
     --xformers \
     --sample_sampler=euler_a \
@@ -49,7 +47,6 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --sample_every_n_epochs="1" \
     --sample_every_n_steps="100" \
     --in_json="/workspace/training/captions.json" \
-    --persistent_data_loader_workers \
     --gradient_accumulation_steps=4 \
     --log_with="tensorboard" \
     --logging_dir="/workspace/output/logs" \
