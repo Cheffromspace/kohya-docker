@@ -1,7 +1,7 @@
 #! /bin/bash
 # fetch training data from s3
 
-mkdir -p /workspace/output/
+mkdir -p /workspace/output/logs
 
 echo "Starting training"
 cd /workspace/kohya_ss
@@ -17,7 +17,9 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --min_bucket_reso=256 \
     --max_bucket_reso=2048 \
     --gradient_checkpointing \
-    --learning_rate="3e-05" \
+    --learning_rate=8e-6 \
+    --learning_rate_te1=5.2e-6 \
+    --learning_rate_te2=4.8e-6 \
     --lr_scheduler="constant_with_warmup" \
     --lr_scheduler_num_cycles="50" \
     --max_data_loader_n_workers="0" \
@@ -27,9 +29,6 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --max_train_steps="10000" \
     --min_snr_gamma=5 \
     --mixed_precision="fp16" \
-    --network_alpha="32" \
-    --network_dim=32 \
-    --network_module=networks.lora \
     --no_half_vae \
     --optimizer_args scale_parameter=False relative_step=False warmup_init=False \
     --optimizer_type="Adafactor" \
@@ -39,11 +38,10 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --save_every_n_epochs="1" \
     --save_model_as=safetensors \
     --save_precision="fp16" \
-    --text_encoder_lr=3e-05 \
+    --text_encoder_lr=5.2e-6 \
     --train_batch_size="32" \
-    --training_comment="3 repeats" \
     --train_data_dir="/workspace/training/dataset" \
-    --unet_lr=3e-05 \
+    --unet_lr=8e-6 \
     --xformers \
     --sample_sampler=euler_a \
     --sample_prompts="/workspace/training/prompt.txt" \
