@@ -6,8 +6,11 @@ mkdir -p /workspace/output/logs
 echo "Starting training"
 cd /workspace/kohya_ss
 source venv/bin/activate
+pip install -r requirements.txt
+pip install TensorRT
 
 accelerate launch --num_cpu_threads_per_process=2 \
+    --config_file=/workspace/kohya_ss/accelerate_config/config.yaml \
     "./sdxl_train.py" \
     --bucket_reso_steps=64 \
     --cache_latents \
@@ -46,7 +49,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --sample_every_n_epochs="1" \
     --sample_every_n_steps="100" \
     --in_json="/workspace/training/captions.json" \
-    --persistent_data_loader_workers=4 \
+    --persistent_data_loader_workers \
     --gradient_accumulation_steps=4 \
     --log_with="tensorboard" \
     --logging_dir="/workspace/output/logs" \
