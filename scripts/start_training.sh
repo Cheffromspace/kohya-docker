@@ -6,7 +6,12 @@ echo "Starting training"
 cd /workspace/kohya_ss
 source venv/bin/activate
 
+[[ RUNPOD_GPU_COUNT -gt 1 ]] && MULTI_GPU=true || MULTI_GPU=false
+
 accelerate launch --num_cpu_threads_per_process=2 \
+    --multi_gpu="${MULTI_GPU}" \
+    --num_processes="${RUNPOD_GPU_COUNT}" \
+    --num_machines=1 \
     --config_file=/workspace/training/accelerate.yaml \
     "./sdxl_train.py" \
     --bucket_reso_steps=64 \
@@ -34,7 +39,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --output_dir="/workspace/output" \
     --output_name="trained" \
     --pretrained_model_name_or_path="${PRETRAINED_MODEL_NAME_OR_PATH}" \
-    --save_every_n_epochs="1" \
+    --save_every_n_epochs="3" \
     --save_model_as=safetensors \
     --save_precision="fp16" \
     --train_batch_size="${BATCH_SIZE}" \
@@ -48,7 +53,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --log_with="tensorboard" \
     --logging_dir="/workspace/output/logs" \
     --max_token_length="150" \
-    --dataset_repeats="4" \
+    --dataset_repeats=${DATASET_REPEATS} \
     --shuffle_captions \
     --caption_extension="txt"
 

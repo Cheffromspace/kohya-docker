@@ -8,7 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Africa/Johannesburg \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=on \
-    SHELL=/bin/bash
+    SHELL=/bin/bash \
+    BATCH_SIZE=8 \
+    S3_BUCKET_NAME=mytrainingdata \
+    MIXED_PRECISION=fp16 \
+    NUM_MACHINES=1 \
+    MAX_TRAIN_EPOCHS=50 \
+    DATASET_REPEATS=80
 
 # Install Ubuntu packages
 RUN apt update && \
@@ -57,6 +63,7 @@ RUN apt update && \
 
 # Set Python
 RUN ln -s /usr/bin/python3.10 /usr/bin/python
+
 
 # Stage 2: Install kohya_ss and python modules
 FROM base as kohya_ss_setup
@@ -116,6 +123,9 @@ RUN curl https://getcroc.schollz.com | bash
 
 # Install awscli
 RUN pip3 install awscli
+
+# Set fd-find
+RUN ln -s $(which fdfind) ~/.local/bin/fd
 
 # Remove existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*
