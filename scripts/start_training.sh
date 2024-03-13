@@ -37,21 +37,23 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --save_every_n_epochs="1" \
     --save_model_as=safetensors \
     --save_precision="fp16" \
-    --train_batch_size="32" \
+    --train_batch_size="${BATCH_SIZE}" \
     --train_data_dir="/workspace/training/dataset" \
     --xformers \
     --sample_sampler=euler_a \
     --sample_prompts="/workspace/training/prompt.txt" \
     --sample_every_n_epochs="1" \
     --sample_every_n_steps="100" \
-    --in_json="/workspace/training/captions.json" \
     --gradient_accumulation_steps=4 \
     --log_with="tensorboard" \
     --logging_dir="/workspace/output/logs" \
     --max_token_length="150" \
-    --dataset_repeats="4"
+    --dataset_repeats="4" \
+    --shuffle_captions \
+    --caption_extension="txt"
 
 # Export models to s3
 aws s3 cp /workspace/output s3://${S3_BUCKET_NAME}/training-output --recursive
 # Shut down
-exit
+exi3 x H100 80GB SXM5
+78 vCPU 755 GB RAMt
