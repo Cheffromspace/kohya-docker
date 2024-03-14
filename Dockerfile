@@ -125,7 +125,7 @@ RUN curl https://getcroc.schollz.com | bash
 RUN pip3 install awscli
 
 # Set fd-find
-RUN ln -s $(which fdfind) ~/.local/bin/fd
+RUN mv $(which fdfind) /usr/local/bin/fd
 
 # Remove existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*
