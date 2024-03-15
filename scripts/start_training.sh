@@ -1,12 +1,27 @@
 #! /bin/bash
 
-mkdir -p /workspace/output/logs
+# Function to sync output directory to S3
+sync_output_to_s3() {
+    while true; do
+        # Sync the output directory to S3
+        aws s3 mv ${OUTPUT_DIR} "s3://${S3_BUCKET_NAME}/training-output" --recursive
+
+        # Wait for a certain interval before syncing again
+        sleep 60 # Adjust the interval as needed
+    done
+}
 
 echo "Starting training"
-cd /workspace/kohya_ss
-source venv/bin/activate
 
 [[ RUNPOD_GPU_COUNT -gt 1 ]] && MULTI_GPU=true || MULTI_GPU=false
+
+#Continuously output to S3 durring training
+sync_output_to_s3 &
+sync_pid=$!
+
+cd /workspace/kohya_ss
+source venv/bin/activate
+mkdir -p /workspace/output/logs
 
 accelerate launch --num_cpu_threads_per_process=2 \
     --multi_gpu="${MULTI_GPU}" \
@@ -36,7 +51,7 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --no_half_vae \
     --optimizer_args scale_parameter=False relative_step=False warmup_init=False \
     --optimizer_type="Adafactor" \
-    --output_dir="/workspace/output" \
+    --output_dir="${OUTPUT_DIR}" \
     --output_name="trained" \
     --pretrained_model_name_or_path="${PRETRAINED_MODEL_NAME_OR_PATH}" \
     --save_every_n_epochs="3" \
@@ -51,14 +66,16 @@ accelerate launch --num_cpu_threads_per_process=2 \
     --sample_every_n_steps="100" \
     --gradient_accumulation_steps=4 \
     --log_with="tensorboard" \
-    --logging_dir="/workspace/output/logs" \
+    --logging_dir="${OUTPUT_DIR}/logs" \
     --max_token_length="150" \
     --dataset_repeats=${DATASET_REPEATS} \
-    --shuffle_captions \
+    --shuffle_caption \
     --caption_extension="txt"
 
-# Export models to s3
+#kill sync process
+kill $sync_pid
+
+#finish syncing output
 aws s3 cp /workspace/output s3://${S3_BUCKET_NAME}/training-output --recursive
 # Shut down
-exi3 x H100 80GB SXM5
-78 vCPU 755 GB RAMt
+runpodctl stop $RUNPOD_POD_ID
