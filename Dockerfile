@@ -14,8 +14,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MIXED_PRECISION=fp16 \
     NUM_MACHINES=1 \
     MAX_TRAIN_EPOCHS=50 \
-    DATASET_REPEATS=80 \
-    OUTPUT_DIR="/workspace/output/"
+    OUTPUT_DIR="/workspace/output/" \
+    LOGGING_DIR="/workspace/logs/" \
+    DATASET_REPEATS=50 \
+    START_TRAINING=true
 
 # Install Ubuntu packages
 RUN apt update && \
